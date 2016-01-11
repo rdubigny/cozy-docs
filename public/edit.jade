@@ -1,0 +1,15 @@
+doctype html
+html(lang="fr")
+    head
+        title Docs
+
+        script(src="https://cdn.tinymce.com/4/tinymce.min.js")
+        script.
+            tinymce.init({selector: '#mytextarea'});
+    body
+        h1= doc[0].title
+        form(action="save", method="post")
+            textarea#mytextarea(name="content")= doc[0].content
+            input(type="submit", value="Save")
+
+        a(href="/") Back to list

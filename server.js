@@ -17,45 +17,58 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json());
 
 // Database initialization
-db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='bookmarks'", function(err, row) {
+db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='docs'", function(err, row) {
     if(err !== null) {
         console.log(err);
     }
     else if(row == null) {
-        db.run('CREATE TABLE "bookmarks" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "title" VARCHAR(255), url VARCHAR(255))', function(err) {
+        db.run('CREATE TABLE "docs" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "title" VARCHAR(255), "content" TEXT)', function(err) {
             if(err !== null) {
                 console.log(err);
             }
             else {
-                console.log("SQL Table 'bookmarks' initialized.");
+                console.log("SQL Table 'docs' initialized.");
             }
         });
     }
     else {
-        console.log("SQL Table 'bookmarks' already initialized.");
+        console.log("SQL Table 'docs' already initialized.");
     }
 });
 
 // We render the templates with the data
 app.get('/', function(req, res) {
 
-    db.all('SELECT * FROM bookmarks ORDER BY title', function(err, row) {
+    db.all('SELECT * FROM docs ORDER BY title', function(err, row) {
         if(err !== null) {
             res.status(500).send("An error has occurred -- " + err);
         }
         else {
-            res.render('index.jade', {bookmarks: row}, function(err, html) {
+            res.render('index.jade', {docs: row}, function(err, html) {
                 res.status(200).send(html);
             });
         }
     });
 });
 
-// We define a new route that will handle bookmark creation
+// We render the templates with the data
+app.get('/d/:id/edit', function(req, res) {
+    db.all("SELECT * FROM docs WHERE id='" + req.params.id + "'", function(err, row) {
+        if(err !== null) {
+            res.status(500).send("An error has occurred -- " + err);
+        }
+        else {
+            res.render('edit.jade', {doc: row}, function(err, html) {
+                res.status(200).send(html);
+            });
+        }
+    });
+});
+
+// We define a new route that will handle doc creation
 app.post('/add', function(req, res) {
     title = req.body.title;
-    url = req.body.url;
-    sqlRequest = "INSERT INTO 'bookmarks' (title, url) VALUES('" + title + "', '" + url + "')"
+    sqlRequest = "INSERT INTO 'docs' (title) VALUES('" + title + "')"
     db.run(sqlRequest, function(err) {
         if(err !== null) {
             res.status(500).send("An error has occurred -- " + err);
@@ -66,9 +79,22 @@ app.post('/add', function(req, res) {
     });
 });
 
-// We define another route that will handle bookmark deletion
+// We define a new route that will handle doc creation
+app.post('/d/:id/save', function(req, res) {
+    sqlRequest = "UPDATE 'docs' SET content='" + req.body.content + "' WHERE id='" + req.params.id + "'"
+    db.run(sqlRequest, function(err) {
+        if(err !== null) {
+            res.status(500).send("An error has occurred -- " + err);
+        }
+        else {
+            res.redirect('back');
+        }
+    });
+});
+
+// We define another route that will handle doc deletion
 app.get('/delete/:id', function(req, res) {
-    db.run("DELETE FROM bookmarks WHERE id='" + req.params.id + "'", function(err) {
+    db.run("DELETE FROM docs WHERE id='" + req.params.id + "'", function(err) {
         if(err !== null) {
             res.status(500).send("An error has occurred -- " + err);
         }
